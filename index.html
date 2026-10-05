@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StaffTime | AI-Powered Платформа управления персоналом</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #121417;
+            --bg-panel: #1E2126;
+            --text-main: #F3F4F6;
+            --text-muted: #9CA3AF;
+            --accent-cyan: #00E5FF;
+            --accent-amber: #FFB800;
+            --accent-red: #FF4D4D;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            scroll-behavior: smooth;
+        }
+
+        .grid-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-image: 
+                linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+        }
+
+        .nav-dots {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .nav-dots a {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            opacity: 0.5;
+            transition: 0.3s;
+        }
+
+        .nav-dots a:hover {
+            opacity: 1;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4vh 5vw;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+            min-height: auto;
+        }
+
+        h1 { font-size: 42px; font-weight: 800; letter-spacing: -1px; margin-bottom: 6px; line-height: 1.1; }
+        h1 span { color: var(--accent-cyan); }
+        h2 { font-size: 20px; font-weight: 600; margin-bottom: 10px; color: var(--text-main); }
+        p { font-size: 13px; color: var(--text-muted); max-width: 900px; line-height: 1.4; font-weight: 400; margin-bottom: 10px; }
+        
+        .mono {
+            font-family: 'Fira Code', monospace;
+            color: var(--accent-cyan);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.3fr 0.7fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 5px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+
+        .card {
+            background: var(--bg-panel);
+            padding: 14px 16px;
+            border-radius: 10px;
+            border-top: 2px solid transparent;
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            border-top: 2px solid var(--accent-cyan);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .card-icon { width: 20px; height: 20px; margin-bottom: 8px; }
+        .card-icon.cyan { color: var(--accent-cyan); filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.4)); }
+        .card-icon.amber { color: var(--accent-amber); filter: drop-shadow(0 0 6px rgba(255, 184, 0, 0.4)); }
+        .card-icon.red { color: var(--accent-red); filter: drop-shadow(0 0 6px rgba(255, 77, 77, 0.4)); }
+
+        .card-title { font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 4px; }
+        .card p { font-size: 12px; margin: 0; color: var(--text-muted); }
+
+        .logo-small { width: 24px; height: 24px; margin-bottom: 8px; }
+
+        .step-box {
+            background: rgba(0, 229, 255, 0.03);
+            border: 1px solid rgba(0, 229, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px 12px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .step-number {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-cyan);
+            color: var(--bg-dark);
+            font-family: 'Fira Code', monospace;
+            font-weight: 800;
+            font-size: 11px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .step-icon { width: 24px; height: 24px; color: var(--text-main); margin-bottom: 6px; margin-top: 5px; }
+        .step-title { font-weight: 600; font-size: 13px; margin-bottom: 4px; color: var(--accent-cyan); }
+        .step-desc { font-size: 11px; color: var(--text-muted); line-height: 1.3; }
+
+        .feature-graphic {
+            width: 100%;
+            height: 70px;
+            background: var(--bg-dark);
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .ai-banner {
+            width: 100%;
+            height: 40px;
+            background: rgba(0, 229, 255, 0.05);
+            border: 1px solid rgba(0, 229, 255, 0.1);
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hl { color: var(--accent-cyan); }
+        .hl-red { color: var(--accent-red); }
+
+        /* Gravatar Hovercard Styles */
+        .gravatar-hovercard {
+            background: var(--bg-panel);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+            margin: 40px auto;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            font-family: 'Inter', sans-serif;
+        }
+        .gravatar-hovercard__profile-color {
+            height: 120px;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        .gravatar-hovercard__inner {
+            position: relative;
+            z-index: 2;
+            padding: 24px;
+        }
+        .gravatar-hovercard__header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-top: 40px;
+        }
+        .gravatar-hovercard__avatar {
+            width: 104px;
+            height: 104px;
+            border-radius: 50%;
+            border: 4px solid var(--bg-panel);
+            background: var(--bg-panel);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .gravatar-hovercard__name {
+            font-size: 20px;
+            color: var(--text-main);
+            margin: 12px 0 4px 0;
+            font-weight: 600;
+        }
+        .gravatar-hovercard__job, .gravatar-hovercard__location {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin: 2px 0;
+        }
+        .gravatar-hovercard__personal-info-link { text-decoration: none; }
+        .gravatar-hovercard__body {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .gravatar-hovercard__description {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin: 0;
+        }
+        .gravatar-hovercard__social-links {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .gravatar-hovercard__social-icon {
+            width: 28px;
+            height: 28px;
+            opacity: 0.8;
+            transition: 0.2s;
+            filter: invert(1);
+        }
+        .gravatar-hovercard__social-icon:hover { opacity: 1; }
+        .gravatar-hovercard__buttons {
+            display: flex;
+            justify-content: center;
+        }
+        .gravatar-hovercard__button {
+            background: var(--accent-cyan);
+            color: var(--bg-dark);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 14px;
+        }
+        .gravatar-hovercard__button:hover { opacity: 0.9; transform: translateY(-2px); }
+        .gravatar-hovercard__footer {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+        .gravatar-hovercard__footer a { color: var(--text-muted); text-decoration: none; }
+        .gravatar-hovercard__drawer {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10;
+        }
+        .gravatar-hovercard__drawer--open { display: block; }
+        .gravatar-hovercard__drawer-backdrop {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+        }
+        .gravatar-hovercard__drawer-card {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%;
+            background: var(--bg-panel);
+            border-radius: 16px 16px 0 0;
+            padding: 24px;
+            box-sizing: border-box;
+            transform: translateY(100%);
+            animation: slideUp 0.3s forwards;
+        }
+        @keyframes slideUp { to { transform: translateY(0); } }
+        .gravatar-hovercard__drawer-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+        }
+        .gravatar-hovercard__drawer-title { color: var(--text-main); margin: 0; font-size: 18px; }
+        .gravatar-hovercard__drawer-close { background: none; border: none; cursor: pointer; filter: invert(1); }
+        .gravatar-hovercard__drawer-items { list-style: none; padding: 0; margin: 0; }
+        .gravatar-hovercard__drawer-item { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+        .gravatar-hovercard__drawer-item-icon { filter: invert(1); opacity: 0.7; }
+        .gravatar-hovercard__drawer-item-label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 2px;}
+        .gravatar-hovercard__drawer-item-link, .gravatar-hovercard__drawer-item-text { color: var(--text-main); text-decoration: none; font-size: 14px; font-weight: 500;}
+
+        @media (max-width: 768px) {
+            section { padding: 30px 15px; }
+            .nav-dots { display: none; }
+            h1 { font-size: 32px; }
+            h2 { font-size: 18px; }
+            .hero-grid, .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; display: flex; flex-direction: column; }
+            .hero-image { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<div class="nav-dots">
+    <a href="#slide-1" title="Главная"></a>
+    <a href="#slide-2" title="Проблема"></a>
+    <a href="#slide-3" title="Наш Продукт"></a>
+    <a href="#slide-4" title="Путь Пользователя"></a>
+    <a href="#slide-5" title="Модули Lego"></a>
+    <a href="#slide-6" title="AI Интеграция"></a>
+    <a href="#slide-7" title="Юриспруденция"></a>
+    <a href="#slide-8" title="Финансы"></a>
+    <a href="#slide-9" title="Риски"></a>
+    <a href="#slide-10" title="Экономика"></a>
+    <a href="#contact" title="Контакты"></a>
+</div>
+
+<section id="slide-1">
+    <div class="hero-grid">
+        <div class="hero-text">
+            <span class="mono">StaffTime Pitch Deck</span>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <svg class="logo-small" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="20" y="20" width="25" height="25" rx="5" fill="#00E5FF" />
+                    <rect x="55" y="20" width="25" height="25" rx="5" fill="#F3F4F6" />
+                    <rect x="20" y="55" width="25" height="25" rx="5" fill="#F3F4F6" />
+                    <rect x="55" y="55" width="25" height="25" rx="5" fill="#FFB800" />
+                </svg>
+                <h1 style="margin: 0;">Staff<span>Time</span></h1>
+            </div>
+            <p style="font-size: 16px; color: var(--text-main); margin-bottom: 6px;">AI-Платформа управления персоналом.</p>
+            <p>Цифровой шеринг линейного персонала в HoReCa и Ритейле. Интеллектуальная архитектура букинга смен и предиктивного матчинга.</p>
+        </div>
+        
+        <div class="hero-image" style="display: flex; justify-content: center; align-items: center;">
+            <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; max-width: 400px; height: auto;">
+                <!-- Spokes -->
+                <g stroke="rgba(255,255,255,0.15)" stroke-width="1.5" stroke-dasharray="2 6">
+                    <line x1="60" y1="60" x2="340" y2="340" />
+                    <line x1="60" y1="340" x2="340" y2="60" />
+                    <line x1="200" y1="40" x2="200" y2="360" />
+                    <line x1="40" y1="200" x2="360" y2="200" />
+                </g>
+
+                <!-- Rings -->
+                <circle cx="200" cy="200" r="140" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" stroke-dasharray="4 6"/>
+                <circle cx="200" cy="200" r="85" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" stroke-dasharray="2 6">
+                    <animateTransform attributeName="transform" type="rotate" from="0 200 200" to="360 200 200" dur="60s" repeatCount="indefinite"/>
+                </circle>
+
+                <!-- Center Element -->
+                <circle cx="200" cy="200" r="35" stroke="#00E5FF" stroke-width="2.5" fill="var(--bg-panel)" filter="drop-shadow(0 0 12px rgba(0,229,255,0.4))"/>
+                <circle cx="200" cy="200" r="42" stroke="#00E5FF" stroke-width="1" fill="none" opacity="0.5"/>
+                <path d="M 185 200 L 215 200 M 200 185 L 200 215" stroke="#00E5FF" stroke-width="2"/>
+
+                <!-- Orthogonal Dots -->
+                <circle cx="40" cy="200" r="3" fill="#00E5FF"/>
+                <circle cx="360" cy="200" r="3" fill="#00E5FF"/>
+                <circle cx="200" cy="40" r="3" fill="#00E5FF"/>
+                <circle cx="200" cy="360" r="3" fill="#00E5FF"/>
+
+                <!-- Diagonal Dots -->
+                <circle cx="140" cy="140" r="3" fill="#FFB800"/>
+                <circle cx="260" cy="140" r="3" fill="#00E5FF"/>
+                <circle cx="140" cy="260" r="3" fill="#00E5FF"/>
+                <circle cx="260" cy="260" r="3" fill="#FFB800"/>
+
+                <!-- Top Left (Amber - Cloche) -->
+                <g transform="translate(101, 101)">
+                    <circle cx="0" cy="0" r="18" fill="var(--bg-panel)" stroke="#FFB800" stroke-width="1.5"/>
+                    <path d="M -8 4 L 8 4 M -5 4 A 5 5 0 0 1 5 4" stroke="#FFB800" stroke-width="1.5" fill="none"/>
+                    <circle cx="0" cy="-2" r="1.5" fill="#FFB800"/>
+                </g>
+
+                <!-- Top Right (White - App) -->
+                <g transform="translate(299, 101)">
+                    <circle cx="0" cy="0" r="18" fill="var(--bg-panel)" stroke="#F3F4F6" stroke-width="1.5"/>
+                    <rect x="-6" y="-6" width="12" height="12" rx="2" fill="none" stroke="#F3F4F6" stroke-width="1.5"/>
+                </g>
+
+                <!-- Bottom Left (White - User) -->
+                <g transform="translate(101, 299)">
+                    <circle cx="0" cy="0" r="18" fill="var(--bg-panel)" stroke="#F3F4F6" stroke-width="1.5"/>
+                    <circle cx="0" cy="-3" r="4" fill="none" stroke="#F3F4F6" stroke-width="1.5"/>
+                    <path d="M -9 9 A 10 10 0 0 1 9 9" fill="none" stroke="#F3F4F6" stroke-width="1.5"/>
+                </g>
+
+                <!-- Bottom Right (Amber - User) -->
+                <g transform="translate(299, 299)">
+                    <circle cx="0" cy="0" r="18" fill="var(--bg-panel)" stroke="#FFB800" stroke-width="1.5"/>
+                    <circle cx="0" cy="-3" r="4" fill="none" stroke="#FFB800" stroke-width="1.5"/>
+                    <path d="M -9 9 A 10 10 0 0 1 9 9" fill="none" stroke="#FFB800" stroke-width="1.5"/>
+                </g>
+            </svg>
+        </div>
+    </div>
+</section>
+
+<section id="slide-2">
+    <span class="mono">01. Контекст рынка Ташкента</span>
+    <h2>Острая кадровая боль в HoReCa</h2>
+    <div class="grid-2">
+        <div class="card">
+            <svg class="card-icon amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div class="card-title">Проблема бизнеса</div>
+            <p>Текучка кадров в ритейле и общепите огромная. Невыход линейного сотрудника на смену парализует процессы. Существующие чаты в мессенджерах хаотичны и не дают гарантий квалификации.</p>
+        </div>
+        <div class="card">
+            <svg class="card-icon cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <div class="card-title">Решение от StaffTime</div>
+            <p>Платформа мгновенного матчинга. Управляющий создает заявку, а рейтинговые исполнители поблизости получают оповещение. Замена находится за 15 минут с полным юридическим оформлением.</p>
+        </div>
+    </div>
+</section>
+
+<section id="slide-3">
+    <span class="mono">02. Что мы продаем</span>
+    <h2>Два интерфейса одной экосистемы</h2>
+    <div class="grid-2">
+        <div class="card">
+            <div class="feature-graphic">
+                <svg viewBox="0 0 100 60" style="width: 70px; height: auto;" fill="none" stroke="var(--accent-cyan)" stroke-width="1.5">
+                    <rect x="5" y="10" width="90" height="40" rx="2" fill="var(--bg-panel)"/>
+                    <line x1="5" y1="20" x2="95" y2="20"/>
+                    <rect x="12" y="25" width="15" height="4" fill="var(--accent-cyan)"/>
+                    <rect x="32" y="25" width="50" height="4" fill="none"/>
+                    <rect x="12" y="35" width="25" height="4" fill="none" stroke="var(--accent-amber)"/>
+                    <circle cx="85" cy="15" r="2" fill="var(--accent-cyan)"/>
+                </svg>
+            </div>
+            <div class="card-title">B2B Dashboard (Менеджер)</div>
+            <p>Веб-приложение для управляющих рестораном. Календарь смен, аналитика выплат, база исполнителей и создание массовых расписаний.</p>
+        </div>
+        <div class="card">
+            <div class="feature-graphic">
+                <svg viewBox="0 0 100 60" style="width: 70px; height: auto;" fill="none" stroke="var(--accent-amber)" stroke-width="1.5">
+                    <rect x="35" y="5" width="30" height="50" rx="3" fill="var(--bg-panel)"/>
+                    <rect x="40" y="12" width="20" height="15" fill="none" stroke="var(--accent-cyan)"/>
+                    <circle cx="50" cy="48" r="2" fill="var(--accent-amber)"/>
+                    <line x1="42" y1="34" x2="58" y2="34" stroke="var(--text-muted)"/>
+                    <line x1="42" y1="39" x2="52" y2="39" stroke="var(--text-muted)"/>
+                </svg>
+            </div>
+            <div class="card-title">Telegram Mini App (Для всех)</div>
+            <p>Карманный помощник внутри Telegram. Уведомления, акцепт заявок, подтверждение смен и трекинг статусов происходят прямо в мессенджере.</p>
+        </div>
+    </div>
+</section>
+
+<section id="slide-4">
+    <span class="mono">03. Путь пользователя</span>
+    <h2>Конкретные шаги работы платформы</h2>
+    <div class="grid-4">
+        <div class="step-box">
+            <div class="step-number">1</div>
+            <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <div class="step-title">Создание заявки</div>
+            <div class="step-desc">Менеджер указывает дату и ставку. Система формирует запрос.</div>
+        </div>
+        <div class="step-box">
+            <div class="step-number">2</div>
+            <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <div class="step-title">Алгоритм поиска</div>
+            <div class="step-desc">StaffTime фильтрует базу по гео и рейтингу, рассылая пуши.</div>
+        </div>
+        <div class="step-box">
+            <div class="step-number">3</div>
+            <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <div class="step-title">Акцепт смены</div>
+            <div class="step-desc">Работники жмут Принять в Telegram. Смена подтверждается.</div>
+        </div>
+        <div class="step-box">
+            <div class="step-number">4</div>
+            <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            <div class="step-title">Выполнение и оплата</div>
+            <div class="step-desc">Менеджер закрывает смену, деньги уходят на карту работника.</div>
+        </div>
+    </div>
+</section>
+
+<section id="slide-5">
+    <span class="mono">04. Техническая архитектура</span>
+    <h2>Модульные блоки (Lego-подход)</h2>
+    <div class="grid-3">
+        <div class="card">
+            <svg class="card-icon cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <div class="card-title">Mass Booking</div>
+            <p>Модуль пакетного создания смен и графиков работы на месяц вперед через единую интерактивную сетку для штатных сотрудников сети.</p>
+        </div>
+        <div class="card">
+            <svg class="card-icon amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <div class="card-title">Instant Replacement</div>
+            <p>Автоматизированный алгоритм экстренной замены при форс-мажорах с учетом геопозиции кандидатов.</p>
+        </div>
+        <div class="card">
+            <svg class="card-icon cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <div class="card-title">Venue Access</div>
+            <p>Система белых списков. Менеджеры открывают доступ к заявкам только тем, кто уже прошел стажировку в их филиале.</p>
+        </div>
+    </div>
+</section>
+
+<section id="slide-6">
+    <span class="mono">05. Технологический стек</span>
+    <h2>Искусственный интеллект как ядро</h2>
+    <div class="ai-banner">
+        <svg viewBox="0 0 400 40" style="width: 100%; height: 100%;" fill="none" stroke="var(--accent-cyan)" stroke-width="1.5">
+            <path d="M0 20 Q 50 5 100 20 T 200 20 T 300 20 T 400 20" stroke="rgba(0, 229, 255, 0.3)"/>
+            <path d="M0 20 Q 50 35 100 20 T 200 20 T 300 20 T 400 20" stroke="rgba(255, 184, 0, 0.3)"/>
+            <circle cx="100" cy="20" r="3" fill="var(--accent-cyan)"/>
+            <circle cx="200" cy="20" r="3" fill="var(--accent-amber)"/>
+            <circle cx="300" cy="20" r="3" fill="var(--accent-cyan)"/>
+        </svg>
+    </div>
+    <div class="grid-3">
+        <div class="card">
+            <svg class="card-icon cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            <div class="card-title">NLP-ассистент (Gemini)</div>
+            <p>Создание смен без клавиатуры. Менеджер отправляет боту голосовое: Завтра нужны два повара. Модель парсит текст и создает карточки.</p>
+        </div>
+        <div class="card">
+            <svg class="card-icon amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <div class="card-title">Предиктивный скоринг</div>
+            <p>Машинное обучение анализирует историю и параметры среды. Алгоритм прогнозирует вероятность невыхода работника.</p>
+        </div>
+        <div class="card">
+            <svg class="card-icon cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <div class="card-title">Biometric Anti-Fraud</div>
+            <p>Исполнитель подтверждает выход на точку селфи с геометкой. Система сличает лицо, исключая передачу аккаунтов.</p>
+        </div>
+    </div>
+</section>
+
+<section id="slide-7">
+    <span class="mono">06. Юридический каркас (Узбекистан)</span>
+    <h2>Полное соответствие законам РУз</h2>
+    <div class="grid-2">
+        <div class="card">
+            <div style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 5px;">
+                <svg class="card-icon cyan" style="margin: 0; width: 24px; height: 24px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <div class="card-title" style="margin: 0; line-height: 1.3;">Самозанятые и ПКМ № 706</div>
+            </div>
+            <p>Налоговый кодекс РУз по самозанятым лицам и ПКМ РУз № 706 (аутстаффинг). Платформа страхует рестораны от рисков проверок трудовой инспекции.</p>
+        </div>
+        <div class="card">
+            <div style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 5px;">
+                <svg class="card-icon cyan" style="margin: 0; width: 24px; height: 24px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <div class="card-title" style="margin: 0; line-height: 1.3;">Оферта и Персональные данные</div>
+            </div>
+            <p>Публичная оферта и электронный акцепт через Telegram Mini App. Базы пользователей локализованы на серверах внутри Узбекистана.</p>
+        </div>
+    </div>
+</section>
+
+<section id="slide-8">
+    <span class="mono">07. Финансовая инфраструктура</span>
+    <h2>Прозрачный денежный контур</h2>
+    <div class="grid-2">
+        <div class="card">
+            <div style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 5px;">
+                <svg class="card-icon cyan" style="margin: 0; width: 24px; height: 24px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                <div class="card-title" style="margin: 0; line-height: 1.3;">B2B Расчеты и Депозиты</div>
+            </div>
+            <p>Рестораны работают по безналу через банки (Kapitalbank, Tenge Bank). Средства холдируются на счете до подтверждения закрытия смены.</p>
+        </div>
+        <div class="card">
+            <div style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 5px;">
+                <svg class="card-icon cyan" style="margin: 0; width: 24px; height: 24px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                <div class="card-title" style="margin: 0; line-height: 1.3;">Выплаты и Фискализация</div>
+            </div>
+            <p>Интеграция с Payme, Click. P2P выплаты осуществляются на карты UzCard и Humo автоматически с генерацией онлайн чеков.</p>
+        </div>
+    </div>
+</section>
+
+<section id="slide-9">
+    <span class="mono">08. Управление рисками (Due Diligence)</span>
+    <h2>Ключевые угрозы и решения</h2>
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-title"><span class="hl-red">1. Кассовый разрыв</span></div>
+            <p><span class="hl">Риск:</span> Заведение не оплачивает смену вовремя.<br><span class="hl">Митигация:</span> Холдирование. Деньги замораживаются на корпоративной карте ресторана в момент заявки.</p>
+        </div>
+        <div class="card">
+            <div class="card-title"><span class="hl-red">2. Проблема ликвидности</span></div>
+            <p><span class="hl">Риск:</span> Нет исполнителей, нет ресторанов.<br><span class="hl">Митигация:</span> Запуск через B2B SaaS. Рестораны используют платформу для своих штатных сотрудников, наполняя базу.</p>
+        </div>
+        <div class="card">
+            <div class="card-title"><span class="hl-red">3. Обход платформы</span></div>
+            <p><span class="hl">Риск:</span> Ресторан договаривается с работником напрямую.<br><span class="hl">Митигация:</span> Легализация и VenueAccess делают официальную работу безопаснее и дешевле налоговых штрафов.</p>
+        </div>
+        <div class="card">
+            <div class="card-title"><span class="hl-red">4. Качество исполнителей</span></div>
+            <p><span class="hl">Риск:</span> Квалификация не соответствует заявленной.<br><span class="hl">Митигация:</span> Жесткий рейтинг и допуск к смене только верифицированных сотрудников.</p>
+        </div>
+    </div>
+</section>
+
+<section id="slide-10">
+    <span class="mono">09. Бизнес-модель</span>
+    <h2>Экономика и монетизация</h2>
+    <div class="grid-2">
+        <div class="card">
+            <div class="feature-graphic" style="height: 60px;">
+                <svg viewBox="0 0 100 30" style="width: 70px; height: auto;" fill="none" stroke="var(--accent-cyan)" stroke-width="2">
+                    <circle cx="20" cy="15" r="8" fill="rgba(0,229,255,0.1)"/>
+                    <line x1="32" y1="15" x2="68" y2="15" stroke-dasharray="2 2"/>
+                    <rect x="72" y="7" width="16" height="16" rx="4"/>
+                </svg>
+            </div>
+            <div class="card-title">B2B SaaS Подписка</div>
+            <p>Ежемесячная абонентская плата с филиала ресторана за использование инструментов управления штатом.</p>
+        </div>
+        <div class="card">
+            <div class="feature-graphic" style="height: 60px;">
+                <svg viewBox="0 0 100 30" style="width: 70px; height: auto;" fill="none" stroke="var(--accent-amber)" stroke-width="2">
+                    <path d="M10 25 L 30 5 L 50 15 L 80 0" stroke-linecap="round"/>
+                    <circle cx="80" cy="0" r="3" fill="var(--accent-amber)"/>
+                </svg>
+            </div>
+            <div class="card-title">Транзакционная комиссия</div>
+            <p>Комиссионный сбор платформы 10-15% с каждой успешно закрытой смены внешнего исполнителя.</p>
+        </div>
+    </div>
+</section>
+
+<section id="contact" style="border: none; padding-top: 10vh;">
+    <div class="gravatar-hovercard">
+        <div class="gravatar-hovercard__profile-color" style="background: rgb(43, 53, 41);"></div>
+        <div class="gravatar-hovercard__inner">
+            <div class="gravatar-hovercard__header">
+                <a class="gravatar-hovercard__avatar-link" href="https://timsalikhov.link?utm_source=hovercard" target="_blank">
+                    <img class="gravatar-hovercard__avatar" src="https://1.gravatar.com/avatar/adde74c9ad88c97f54a2c29340dcef5d95b7b27e451fc0fb66700be6aa301038?s=256&amp;d=initials" width="104" height="104" alt="Timur Salikhov">
+                </a>
+                <a class="gravatar-hovercard__personal-info-link" href="https://timsalikhov.link?utm_source=hovercard" target="_blank">
+                    <h4 class="gravatar-hovercard__name">Timur Salikhov</h4>
+                    <p class="gravatar-hovercard__job">Founder & CEO</p>
+                    <p class="gravatar-hovercard__location">Almaty, Central Asia</p>
+                </a>
+            </div>
+            <div class="gravatar-hovercard__body">
+                <p class="gravatar-hovercard__description">Open for seed investment discussions and strategic partnerships.</p>
+            </div>
+            <div class="gravatar-hovercard__social-links">
+                <a class="gravatar-hovercard__social-link" href="https://timsalikhov.link?utm_source=hovercard" target="_blank" data-service-name="gravatar">
+                    <img class="gravatar-hovercard__social-icon" src="https://s.gravatar.com/icons/gravatar.svg" width="32" height="32" alt="Gravatar">
+                </a>
+                <a class="gravatar-hovercard__social-link" href="https://t.me/timuverse" target="_blank" data-service-name="telegram">
+                    <img class="gravatar-hovercard__social-icon" src="https://s.gravatar.com/icons/telegram.svg" width="32" height="32" alt="Telegram">
+                </a>
+                <a class="gravatar-hovercard__social-link" href="https://www.linkedin.com/in/timursalikhov" target="_blank" data-service-name="linkedin">
+                    <img class="gravatar-hovercard__social-icon" src="https://s.gravatar.com/icons/linkedin.svg" width="32" height="32" alt="LinkedIn">
+                </a>
+            </div>
+            <div class="gravatar-hovercard__buttons">
+                <button class="gravatar-hovercard__button" data-target-drawer="contact">Contact Me</button>
+            </div>
+            <div class="gravatar-hovercard__footer">
+                <a class="gravatar-hovercard__profile-url" title="https://timsalikhov.link" href="https://timsalikhov.link/?utm_source=profile-card" target="_blank">timsalikhov.link</a>
+                <a class="gravatar-hovercard__profile-link" href="https://timsalikhov.link/?utm_source=profile-card" target="_blank">View profile →</a>
+            </div>
+            <div class="gravatar-hovercard__drawer" data-drawer-name="contact">
+                <div class="gravatar-hovercard__drawer-backdrop" data-target-drawer="contact"></div>
+                <div class="gravatar-hovercard__drawer-card">
+                    <div class="gravatar-hovercard__drawer-header">
+                        <h2 class="gravatar-hovercard__drawer-title">Contact Details</h2>
+                        <button class="gravatar-hovercard__drawer-close" data-target-drawer="contact">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 13.0607L15.7123 16.773L16.773 15.7123L13.0607 12L16.773 8.28772L15.7123 7.22706L12 10.9394L8.28771 7.22705L7.22705 8.28771L10.9394 12L7.22706 15.7123L8.28772 16.773L12 13.0607Z" fill="currentColor"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <ul class="gravatar-hovercard__drawer-items">
+                        <li class="gravatar-hovercard__drawer-item">
+                            <div class="gravatar-hovercard__drawer-item-info">
+                                <span class="gravatar-hovercard__drawer-item-label">Email</span>
+                                <span class="gravatar-hovercard__drawer-item-text"><a class="gravatar-hovercard__drawer-item-link" href="mailto:timur.salikhov@avatech.kz" target="_blank">timur.salikhov@avatech.kz</a></span>
+                            </div>
+                        </li>
+                        <li class="gravatar-hovercard__drawer-item">
+                            <div class="gravatar-hovercard__drawer-item-info">
+                                <span class="gravatar-hovercard__drawer-item-label">Phone</span>
+                                <span class="gravatar-hovercard__drawer-item-text">+7 777 256 53 89</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    const hovercardInner = document.querySelector('.gravatar-hovercard__inner');
+
+    function openDrawer( target, container ) {
+        const selector = '.gravatar-hovercard__drawer[data-drawer-name="' + target.dataset.targetDrawer + '"]';
+        const drawer = container.querySelector( selector );
+        drawer?.classList.add( 'gravatar-hovercard__drawer--open' );
+    }
+
+    function closeDrawer( target, container ) {
+        const selector = '.gravatar-hovercard__drawer[data-drawer-name="' + target.dataset.targetDrawer + '"]';
+        const drawer = container.querySelector( selector );
+        drawer?.classList.add( 'gravatar-hovercard__drawer--closing' );
+        drawer?.classList.remove( 'gravatar-hovercard__drawer--open' );
+        setTimeout( () => {
+            drawer?.classList.remove( 'gravatar-hovercard__drawer--closing' );
+        }, 300 );
+    }
+
+    hovercardInner.querySelectorAll( '.gravatar-hovercard__button' ).forEach( ( el ) => {
+        el.addEventListener( 'click', () => openDrawer( el, hovercardInner ) );
+    } );
+    hovercardInner.querySelectorAll( '.gravatar-hovercard__drawer-close' ).forEach( ( el ) => {
+        el.addEventListener( 'click', () => closeDrawer( el, hovercardInner ) );
+    } );
+    hovercardInner.querySelectorAll( '.gravatar-hovercard__drawer-backdrop' ).forEach( ( el ) => {
+        el.addEventListener( 'click', () => closeDrawer( el, hovercardInner ) );
+    } );
+</script>
+
+</body>
+</html>
